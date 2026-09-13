@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ─── Premium Light Theme ─── */
+    --background: 150 20% 98%;
+    --foreground: 160 40% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 40% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 40% 8%;
+    --primary: 172 66% 30%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 18% 93%;
+    --secondary-foreground: 160 40% 8%;
+    --muted: 155 18% 93%;
+    --muted-foreground: 160 10% 45%;
+    --accent: 155 22% 90%;
+    --accent-foreground: 160 40% 8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 155 14% 89%;
+    --input: 155 14% 85%;
+    --ring: 172 66% 30%;
+    --radius: 0.625rem;
+
+    --status-good: #059669;
+    --status-pending: #d97706;
+    --teal-primary: #0d9488;
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-elevated: 0 10px 25px -5px rgb(0 0 0 / 0.06), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+  }
+
+  .dark {
+    /* ─── Premium Dark Theme ─── */
+    --background: 160 30% 6%;
+    --foreground: 150 25% 92%;
+    --card: 160 28% 9%;
+    --card-foreground: 150 25% 92%;
+    --popover: 160 28% 10%;
+    --popover-foreground: 150 25% 92%;
+    --primary: 172 50% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 22% 14%;
+    --secondary-foreground: 150 25% 90%;
+    --muted: 160 22% 14%;
+    --muted-foreground: 155 12% 55%;
+    --accent: 160 22% 16%;
+    --accent-foreground: 150 25% 92%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 18% 15%;
+    --input: 160 18% 17%;
+    --ring: 172 50% 45%;
+
+    --status-good: #34d399;
+    --status-pending: #fbbf24;
+
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+    --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.15);
+    --shadow-elevated: 0 10px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Force mono font on all NIF/NIS/RC codes in tables */
+  .font-mono-code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* ─── Global Polished Select Element ─── */
+@layer components {
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 8px center;
+    padding-left: 24px !important;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .dark select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+  }
+
+  select:hover {
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  select:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
+  }
+
+  select option {
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    padding: 8px;
+  }
+}
+
+/* ─── Premium Filter Bar ─── */
+@layer components {
+  .filter-bar {
+    @apply flex flex-wrap items-center gap-3 p-3.5 rounded-xl border text-xs;
+    background: linear-gradient(135deg, hsl(var(--secondary) / 0.5), hsl(var(--accent) / 0.3));
+    border-color: hsl(var(--border));
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .filter-bar {
+    background: linear-gradient(135deg, hsl(var(--secondary) / 0.4), hsl(var(--accent) / 0.2));
+    border-color: hsl(var(--border) / 0.8);
+  }
+}
+
+/* ─── Smooth Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* ─── Premium Card Enhancements ─── */
+@layer utilities {
+  .card-elevated {
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--primary) / 0.15);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  }
+
+  /* Gradient text utility */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ─── Status Badge Glow in Dark Mode ─── */
+.dark .bg-status-good\/15 {
+  box-shadow: 0 0 8px var(--status-good) inset, 0 0 2px var(--status-good);
+}
+.dark .bg-status-pending\/15 {
+  box-shadow: 0 0 8px var(--status-pending) inset, 0 0 2px var(--status-pending);
+}
+
+/* ─── Better Focus Ring ─── */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.5);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+}
+
+/* ─── Smooth Animations ─── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground) / 0.08) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Print Styles ─── */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  aside, header, .print-hide {
+    display: none !important;
+  }
+}
