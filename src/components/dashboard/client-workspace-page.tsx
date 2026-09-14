@@ -38,6 +38,10 @@ import {
   Search,
   Landmark,
   Download,
+  Bot,
+  Sparkles,
+  ChevronDown,
+  ChevronLeft,
 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -58,6 +62,7 @@ import { EditClientDialog } from './edit-client-dialog'
 import { DeleteConfirmDialog } from './delete-confirm-dialog'
 import { DocumentViewerModal } from './document-viewer-modal'
 import { BankStatementsView } from './bank-statements-section'
+import { AiProcessingView } from './ai-processing-view'
 import type { Invoice, InvoiceInsert } from '../../types/invoice'
 import type { BankStatementInsert } from '../../types/bank-statement'
 import { cn } from '../../lib/utils'
@@ -876,6 +881,12 @@ function WorkspaceInnerContent() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'sale' | 'purchase'>('all')
   const [monthFilter, setMonthFilter] = useState<string>('all')
   const [periodFilter, setPeriodFilter] = useState<string>('all')
+  const [isInvoiceAccordionOpen, setIsInvoiceAccordionOpen] = useState<boolean>(true)
+  const [isBankAccordionOpen, setIsBankAccordionOpen] = useState<boolean>(true)
+  const [isAiAccordionOpen, setIsAiAccordionOpen] = useState<boolean>(true)
+
+  const isInvoiceTabGroup = ['invoices', 'create_pdf', 'upload_doc', 'export_zip'].includes(activeTab)
+  const isBankTabGroup = ['bank_statements', 'upload_bank_statement', 'export_bank_statements'].includes(activeTab)
 
   // Accordion sub-menu tab helpers
   const invoiceSubTabs: { id: ClientTabType; label: string; icon: any; disabled?: boolean }[] = [
@@ -1117,87 +1128,167 @@ function WorkspaceInnerContent() {
           <div className="flex-1 space-y-5 p-4 overflow-y-auto">
             {/* GROUP 1: INVOICES & ARCHIVE */}
             <div className="space-y-1">
-              <p className="text-[11px] font-bold text-muted-foreground px-2 pb-1.5 flex items-center gap-1.5">
-                <FolderArchive className="h-3.5 w-3.5 text-primary" />
-                <span>إدارة سجل الفواتير والأرشيف</span>
-              </p>
+              <button
+                type="button"
+                onClick={() => setIsInvoiceAccordionOpen((prev) => !prev)}
+                className={cn(
+                  'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start',
+                  isInvoiceTabGroup
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <FolderArchive className="h-4 w-4 shrink-0 text-primary" />
+                <span className="flex-1">سجل الفواتير والأرشيف</span>
+                {isInvoiceAccordionOpen ? (
+                  <ChevronDown className="h-4 w-4 text-primary shrink-0 transition-transform" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 shrink-0" />
+                )}
+              </button>
 
-              <div className="space-y-1 ps-1">
-                {invoiceSubTabs.map((subTab) => {
-                  const isActive = activeTab === subTab.id
-                  const SubIcon = subTab.icon
+              {isInvoiceAccordionOpen && (
+                <div className="ps-4 space-y-1 border-s-2 border-primary/20 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
+                  {invoiceSubTabs.map((subTab) => {
+                    const isActive = activeTab === subTab.id
+                    const SubIcon = subTab.icon
 
-                  return (
-                    <button
-                      key={subTab.id}
-                      onClick={() => {
-                        if (!subTab.disabled) {
-                          setActiveTab(subTab.id)
-                        }
-                      }}
-                      disabled={subTab.disabled}
-                      className={cn(
-                        'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all text-start border',
-                        isActive
-                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                          : subTab.disabled
-                          ? 'opacity-40 cursor-not-allowed border-transparent text-muted-foreground'
-                          : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                    >
-                      <SubIcon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{subTab.label}</span>
-                      {subTab.disabled && (
-                        <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded font-mono-code">🔒 مغلقة</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+                    return (
+                      <button
+                        key={subTab.id}
+                        onClick={() => {
+                          if (!subTab.disabled) {
+                            setActiveTab(subTab.id)
+                          }
+                        }}
+                        disabled={subTab.disabled}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                          isActive
+                            ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                            : subTab.disabled
+                            ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        )}
+                      >
+                        <SubIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">{subTab.label}</span>
+                        {subTab.disabled && (
+                          <span className="text-[9px] bg-destructive/10 text-destructive px-1 py-0.2 rounded font-mono-code">🔒</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* GROUP 2: BANK STATEMENTS */}
             <div className="space-y-1 pt-2 border-t border-border/40">
-              <p className="text-[11px] font-bold text-muted-foreground px-2 pb-1.5 flex items-center gap-1.5">
-                <Landmark className="h-3.5 w-3.5 text-primary" />
-                <span>إدارة الحركة البنكية والمصرفية</span>
-              </p>
+              <button
+                type="button"
+                onClick={() => setIsBankAccordionOpen((prev) => !prev)}
+                className={cn(
+                  'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start',
+                  isBankTabGroup
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <Landmark className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span className="flex-1">الكشوفات البنكية</span>
+                {isBankAccordionOpen ? (
+                  <ChevronDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 shrink-0" />
+                )}
+              </button>
 
-              <div className="space-y-1 ps-1">
-                {bankSubTabs.map((subTab) => {
-                  const isActive = activeTab === subTab.id
-                  const SubIcon = subTab.icon
+              {isBankAccordionOpen && (
+                <div className="ps-4 space-y-1 border-s-2 border-emerald-500/20 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
+                  {bankSubTabs.map((subTab) => {
+                    const isActive = activeTab === subTab.id
+                    const SubIcon = subTab.icon
 
-                  return (
-                    <button
-                      key={subTab.id}
-                      onClick={() => {
-                        if (!subTab.disabled) {
-                          setActiveTab(subTab.id)
-                        }
-                      }}
-                      disabled={subTab.disabled}
-                      className={cn(
-                        'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all text-start border',
-                        isActive
-                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                          : subTab.disabled
-                          ? 'opacity-40 cursor-not-allowed border-transparent text-muted-foreground'
-                          : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                    >
-                      <SubIcon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate">{subTab.label}</span>
-                      {subTab.disabled && (
-                        <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded font-mono-code">🔒 مغلقة</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+                    return (
+                      <button
+                        key={subTab.id}
+                        onClick={() => {
+                          if (!subTab.disabled) {
+                            setActiveTab(subTab.id)
+                          }
+                        }}
+                        disabled={subTab.disabled}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                          isActive
+                            ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                            : subTab.disabled
+                            ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        )}
+                      >
+                        <SubIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">{subTab.label}</span>
+                        {subTab.disabled && (
+                          <span className="text-[9px] bg-destructive/10 text-destructive px-1 py-0.2 rounded font-mono-code">🔒</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* GROUP 3: TRADER PROFILE */}
+            {/* GROUP 3: SMART ACCOUNTANT المحاسب الذكي (موقع في الأسفل مع إمكانية الفتح والغلق) */}
+            <div className="space-y-1 pt-2 border-t border-purple-500/30">
+              <button
+                type="button"
+                onClick={() => setIsAiAccordionOpen((prev) => !prev)}
+                className={cn(
+                  'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all text-start border relative overflow-hidden',
+                  activeTab === 'ai_invoice_processing'
+                    ? 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-500/40 shadow-xs'
+                    : 'border-purple-500/20 text-purple-600 dark:text-purple-300 bg-purple-500/5 hover:bg-purple-500/10'
+                )}
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                  <Bot className="h-4 w-4 shrink-0" />
+                </div>
+                <span className="flex-1 font-bold flex items-center gap-1.5">
+                  المحاسب الذكي
+                  <span className="inline-flex items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 dark:text-purple-300">
+                    AI ✨
+                  </span>
+                </span>
+                {isAiAccordionOpen ? (
+                  <ChevronDown className="h-4 w-4 text-purple-500 shrink-0 transition-transform" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 shrink-0" />
+                )}
+              </button>
+
+              {/* Collapsible Child Menu */}
+              {isAiAccordionOpen && (
+                <div className="ps-4 space-y-1 border-s-2 border-purple-500/30 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai_invoice_processing')}
+                    className={cn(
+                      'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                      activeTab === 'ai_invoice_processing'
+                        ? 'bg-purple-600 text-white font-bold shadow-xs'
+                        : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
+                    )}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate">المعالجة الذكية للفواتير</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* GROUP 4: TRADER PROFILE */}
             <div className="space-y-1 pt-2 border-t border-border/40">
               <p className="text-[11px] font-bold text-muted-foreground px-2 pb-1.5">حساب التاجر والبيانات</p>
 
@@ -1355,6 +1446,14 @@ function WorkspaceInnerContent() {
                 return res
               }}
             />
+
+            {/* TAB AI: AI INVOICE PROCESSING */}
+            {activeTab === 'ai_invoice_processing' && (
+              <AiProcessingView
+                client={client}
+                invoices={invoices}
+              />
+            )}
 
             {/* TAB 1: INVOICES & ARCHIVE TABLE */}
             {activeTab === 'invoices' && (

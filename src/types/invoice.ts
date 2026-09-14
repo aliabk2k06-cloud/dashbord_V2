@@ -13,6 +13,12 @@ export type Invoice = {
   notes: string
   fiscal_year: number
   created_at: string
+  ai_status?: string
+  suggested_account_code?: string
+  matched_account_code?: string
+  confidence?: number
+  extracted_data?: string
+  tva_amount?: number
 }
 
 export type InvoiceInsert = Omit<Invoice, 'id' | 'client_id' | 'created_at'>

@@ -5,6 +5,7 @@ import { ClientsTable } from '../components/dashboard/clients-table'
 import { AddClientForm } from '../components/clients/add-client-form'
 import { ClientWorkspacePage } from '../components/dashboard/client-workspace-page'
 import { ClientsDataPage } from '../components/clients-data/clients-data-page'
+import { GlobalAiProcessingPage } from '../components/dashboard/global-ai-processing-page'
 import { useClients } from '../hooks/use-clients'
 import { Button } from '../components/ui/button'
 import { AlertCircle, UserPlus } from 'lucide-react'
@@ -123,6 +124,16 @@ const clientsDataRoute = createRoute({
   ),
 })
 
+const aiProcessingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/ai-processing',
+  component: () => (
+    <AppLayout>
+      <GlobalAiProcessingPage />
+    </AppLayout>
+  ),
+})
+
 // COMPLETELY STANDALONE DEDICATED TRADER WORKSPACE (NO AppLayout WRAPPER!)
 const clientDetailsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -133,7 +144,7 @@ const clientDetailsRoute = createRoute({
   },
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, addClientRoute, clientDetailsRoute, clientsDataRoute])
+const routeTree = rootRoute.addChildren([indexRoute, addClientRoute, clientDetailsRoute, clientsDataRoute, aiProcessingRoute])
 
 export const router = createRouter({ routeTree })
 

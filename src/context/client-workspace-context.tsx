@@ -15,6 +15,7 @@ export type ClientTabType =
   | 'upload_bank_statement'
   | 'export_bank_statements'
   | 'profile'
+  | 'ai_invoice_processing'
 
 interface ClientWorkspaceContextType {
   clientId: string

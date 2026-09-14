@@ -7,7 +7,6 @@ import {
   Upload,
   Archive,
   Building,
-  FileSpreadsheet,
   FolderArchive,
   UserCheck,
   ChevronDown,
@@ -16,6 +15,8 @@ import {
   Landmark,
   FileUp,
   Download,
+  Bot,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
@@ -32,12 +33,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const workspace = useClientWorkspace()
   const [isInvoiceSubMenuOpen, setIsInvoiceSubMenuOpen] = useState(true)
   const [isBankSubMenuOpen, setIsBankSubMenuOpen] = useState(true)
+  const [isAiSubMenuOpen, setIsAiSubMenuOpen] = useState(true)
 
   // Check if we are inside a dedicated client workspace e.g. /clients/:clientId
   const isClientWorkspace = location.pathname.startsWith('/clients/') && location.pathname !== '/clients/add' && workspace?.client
 
   const isInvoiceTabGroup = ['invoices', 'create_pdf', 'upload_doc', 'export_zip'].includes(workspace?.activeTab || '')
   const isBankTabGroup = ['bank_statements', 'upload_bank_statement', 'export_bank_statements'].includes(workspace?.activeTab || '')
+  const isAiTabGroup = ['ai_invoice_processing'].includes(workspace?.activeTab || '')
+
+  const aiSubTabs: { id: ClientTabType; label: string; icon: any; disabled?: boolean }[] = [
+    {
+      id: 'ai_invoice_processing',
+      label: 'المعالجة الذكية للفواتير',
+      icon: Sparkles,
+    },
+  ]
 
   const invoiceSubTabs: { id: ClientTabType; label: string; icon: any; disabled?: boolean }[] = [
     {
@@ -110,13 +121,77 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
 
             {/* Sidebar content */}
-            <div className="flex-1 space-y-4 p-4 text-xs">
-              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2 text-center">
-                <FileSpreadsheet className="h-8 w-8 text-primary mx-auto opacity-80" />
-                <p className="font-bold text-sm text-foreground">قائمة التجار الرئيسية</p>
-                <p className="text-xs text-muted-foreground">
-                  اختر أي تاجر من الجدول للانتقال إلى مساحته المستقلة وإدارة فواتيره وكشوفاته البنكية
-                </p>
+            <div className="flex-1 space-y-4 p-4 text-xs overflow-y-auto">
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold text-muted-foreground px-2 pb-1">القائمة الرئيسية</p>
+
+                {/* 1. Main Home Link */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate({ to: '/' })
+                    onClose()
+                  }}
+                  className={cn(
+                    'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start',
+                    location.pathname === '/'
+                      ? 'bg-primary/10 text-primary border-primary/30'
+                      : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )}
+                >
+                  <Building className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">قائمة التجار الرئيسية</span>
+                </button>
+
+                {/* 2. المحاسب الذكي (Smart Accountant) */}
+                <div className="space-y-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsAiSubMenuOpen((prev) => !prev)}
+                    className={cn(
+                      'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start relative overflow-hidden',
+                      location.pathname.startsWith('/ai-processing')
+                        ? 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-500/40 shadow-xs'
+                        : 'border-purple-500/20 text-foreground bg-purple-500/5 hover:bg-purple-500/10'
+                    )}
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                      <Bot className="h-4 w-4 shrink-0" />
+                    </div>
+                    <span className="flex-1 font-bold flex items-center gap-1.5">
+                      المحاسب الذكي
+                      <span className="inline-flex items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 dark:text-purple-300">
+                        AI ✨
+                      </span>
+                    </span>
+                    {isAiSubMenuOpen ? (
+                      <ChevronDown className="h-4 w-4 text-purple-500 shrink-0 transition-transform" />
+                    ) : (
+                      <ChevronLeft className="h-4 w-4 shrink-0" />
+                    )}
+                  </button>
+
+                  {/* AI Sub-menu items */}
+                  {isAiSubMenuOpen && (
+                    <div className="ps-4 space-y-1 border-s-2 border-purple-500/30 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
+                      <button
+                        onClick={() => {
+                          navigate({ to: '/ai-processing' })
+                          onClose()
+                        }}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                          location.pathname.startsWith('/ai-processing')
+                            ? 'bg-purple-600 text-white font-bold shadow-xs'
+                            : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
+                        )}
+                      >
+                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">المعالجة الذكية للفواتير</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -165,8 +240,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
 
             {/* Client Contextual Sidebar Tabs */}
-            <div className="flex-1 space-y-5 p-4">
-              <div className="space-y-1">
+            <div className="flex-1 space-y-4 p-4">
+              <div className="space-y-2">
                 <p className="text-[11px] font-bold text-muted-foreground px-2 pb-1">أقسام وميزات التاجر</p>
 
                 {/* 1. Main Accordion Group: سجل الفواتير والأرشيف */}
@@ -280,6 +355,69 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                             {subTab.disabled && (
                               <span className="text-[9px] bg-destructive/10 text-destructive px-1 py-0.2 rounded">🔒</span>
                             )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Main Accordion Group: المحاسب الذكي (Smart Accountant) - في الأسفل قابلة للفتح والغلق */}
+                <div className="space-y-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsAiSubMenuOpen((prev) => !prev)}
+                    className={cn(
+                      'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start relative overflow-hidden',
+                      isAiTabGroup
+                        ? 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-500/40 shadow-xs'
+                        : 'border-purple-500/20 text-foreground bg-purple-500/5 hover:bg-purple-500/10'
+                    )}
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                      <Bot className="h-4 w-4 shrink-0" />
+                    </div>
+                    <span className="flex-1 font-bold flex items-center gap-1.5">
+                      المحاسب الذكي
+                      <span className="inline-flex items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 dark:text-purple-300">
+                        AI ✨
+                      </span>
+                    </span>
+                    {isAiSubMenuOpen ? (
+                      <ChevronDown className="h-4 w-4 text-purple-500 shrink-0 transition-transform" />
+                    ) : (
+                      <ChevronLeft className="h-4 w-4 shrink-0" />
+                    )}
+                  </button>
+
+                  {/* AI Sub-menu items */}
+                  {isAiSubMenuOpen && (
+                    <div className="ps-4 space-y-1 border-s-2 border-purple-500/30 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
+                      {aiSubTabs.map((subTab) => {
+                        const isActive = workspace.activeTab === subTab.id
+                        const SubIcon = subTab.icon
+
+                        return (
+                          <button
+                            key={subTab.id}
+                            onClick={() => {
+                              if (!subTab.disabled) {
+                                workspace.setActiveTab(subTab.id)
+                                onClose()
+                              }
+                            }}
+                            disabled={subTab.disabled}
+                            className={cn(
+                              'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                              isActive
+                                ? 'bg-purple-600 text-white font-bold shadow-xs'
+                                : subTab.disabled
+                                ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                                : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
+                            )}
+                          >
+                            <SubIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="flex-1 truncate">{subTab.label}</span>
                           </button>
                         )
                       })}
