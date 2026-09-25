@@ -17,6 +17,9 @@ import {
   Download,
   Bot,
   Sparkles,
+  BarChart3,
+  BookOpen,
+  FolderTree,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
@@ -40,13 +43,28 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const isInvoiceTabGroup = ['invoices', 'create_pdf', 'upload_doc', 'export_zip'].includes(workspace?.activeTab || '')
   const isBankTabGroup = ['bank_statements', 'upload_bank_statement', 'export_bank_statements'].includes(workspace?.activeTab || '')
-  const isAiTabGroup = ['ai_invoice_processing'].includes(workspace?.activeTab || '')
+  const isAiTabGroup = ['ai_smart_processing', 'ai_journal_entries', 'ai_chart_of_accounts', 'ai_reports'].includes(workspace?.activeTab || '')
 
   const aiSubTabs: { id: ClientTabType; label: string; icon: any; disabled?: boolean }[] = [
     {
-      id: 'ai_invoice_processing',
-      label: 'المعالجة الذكية للفواتير',
+      id: 'ai_smart_processing',
+      label: 'المعالجة الذكية',
       icon: Sparkles,
+    },
+    {
+      id: 'ai_journal_entries',
+      label: 'القيود المحاسبية',
+      icon: BookOpen,
+    },
+    {
+      id: 'ai_chart_of_accounts',
+      label: 'مخطط الحسابات',
+      icon: FolderTree,
+    },
+    {
+      id: 'ai_reports',
+      label: 'التقارير والإحصائيات',
+      icon: BarChart3,
     },
   ]
 
@@ -142,56 +160,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   <Building className="h-4 w-4 shrink-0" />
                   <span className="flex-1">قائمة التجار الرئيسية</span>
                 </button>
-
-                {/* 2. المحاسب الذكي (Smart Accountant) */}
-                <div className="space-y-1 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsAiSubMenuOpen((prev) => !prev)}
-                    className={cn(
-                      'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all border text-start relative overflow-hidden',
-                      location.pathname.startsWith('/ai-processing')
-                        ? 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-500/40 shadow-xs'
-                        : 'border-purple-500/20 text-foreground bg-purple-500/5 hover:bg-purple-500/10'
-                    )}
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400">
-                      <Bot className="h-4 w-4 shrink-0" />
-                    </div>
-                    <span className="flex-1 font-bold flex items-center gap-1.5">
-                      المحاسب الذكي
-                      <span className="inline-flex items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 dark:text-purple-300">
-                        AI ✨
-                      </span>
-                    </span>
-                    {isAiSubMenuOpen ? (
-                      <ChevronDown className="h-4 w-4 text-purple-500 shrink-0 transition-transform" />
-                    ) : (
-                      <ChevronLeft className="h-4 w-4 shrink-0" />
-                    )}
-                  </button>
-
-                  {/* AI Sub-menu items */}
-                  {isAiSubMenuOpen && (
-                    <div className="ps-4 space-y-1 border-s-2 border-purple-500/30 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
-                      <button
-                        onClick={() => {
-                          navigate({ to: '/ai-processing' })
-                          onClose()
-                        }}
-                        className={cn(
-                          'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
-                          location.pathname.startsWith('/ai-processing')
-                            ? 'bg-purple-600 text-white font-bold shadow-xs'
-                            : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
-                        )}
-                      >
-                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                        <span className="flex-1 truncate">المعالجة الذكية للفواتير</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 

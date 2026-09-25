@@ -15,7 +15,10 @@ export type ClientTabType =
   | 'upload_bank_statement'
   | 'export_bank_statements'
   | 'profile'
-  | 'ai_invoice_processing'
+  | 'ai_smart_processing'
+  | 'ai_journal_entries'
+  | 'ai_chart_of_accounts'
+  | 'ai_reports'
 
 interface ClientWorkspaceContextType {
   clientId: string
@@ -55,6 +58,7 @@ interface ClientWorkspaceContextType {
   setIsDeleteOpen: (v: boolean) => void
   updateClient: (id: string, updatedData: ClientUpdate) => Promise<{ success: boolean; error?: string }>
   deleteClient: (id: string) => Promise<{ success: boolean; error?: string }>
+  refreshInvoices: () => Promise<void>
 }
 
 const ClientWorkspaceContext = createContext<ClientWorkspaceContextType | null>(null)
@@ -80,6 +84,7 @@ export function ClientWorkspaceProvider({ clientId, children }: { clientId: stri
     deleteInvoice,
     updateInvoice,
     downloadZipArchive,
+    refetch: refreshInvoices,
   } = useInvoices(clientId)
 
   const {
@@ -134,6 +139,7 @@ export function ClientWorkspaceProvider({ clientId, children }: { clientId: stri
     setIsDeleteOpen,
     updateClient,
     deleteClient,
+    refreshInvoices,
   }
 
   return <ClientWorkspaceContext.Provider value={value}>{children}</ClientWorkspaceContext.Provider>

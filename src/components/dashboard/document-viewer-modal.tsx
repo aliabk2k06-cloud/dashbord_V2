@@ -37,13 +37,36 @@ export function DocumentViewerModal({ open, onClose, documentUrl, title = 'مع�
     }
   }
 
-  const handleDownload = () => {
-    const link = document.createElement('a')
-    link.href = documentUrl
-    link.download = title.replace(/\s+/g, '_') + (isPdf ? '.pdf' : '.png')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const handleDownload = async () => {
+    const cleanTitle = (title || 'document').replace(/[\\/:*?"<>|\r\n]/g, '-').replace(/\s+/g, '_').trim()
+    const ext = isPdf ? '.pdf' : '.png'
+    const fileName = cleanTitle.toLowerCase().endsWith(ext) ? cleanTitle : `${cleanTitle}${ext}`
+
+    if (documentUrl.startsWith('data:text/html') || documentUrl.includes('<html')) {
+      handlePrint()
+      return
+    }
+
+    try {
+      const resp = await fetch(documentUrl)
+      if (!resp.ok) throw new Error('Fetch failed')
+      const blob = await resp.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch (e) {
+      const link = document.createElement('a')
+      link.href = documentUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 
   return (

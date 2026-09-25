@@ -7,6 +7,8 @@ import clientsRoutes from './routes/clients.routes.js'
 import invoicesRoutes from './routes/invoices.routes.js'
 import bankStatementsRoutes from './routes/bankStatements.routes.js'
 import accountsRoutes from './routes/accounts.routes.js'
+import pdfRoutes from './routes/pdf.routes.js'
+import n8nRoutes from './routes/n8n.routes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
@@ -30,6 +32,8 @@ app.use('/api/clients', clientsRoutes)
 app.use('/api', invoicesRoutes)
 app.use('/api', bankStatementsRoutes)
 app.use('/api/internal/accounts', accountsRoutes)
+app.use('/api/pdf', pdfRoutes)
+app.use('/api/n8n', n8nRoutes)
 
 // Centralized Error Handling Middleware
 app.use(errorHandler)

@@ -19,6 +19,7 @@ import {
   PlusCircle,
   AlertTriangle,
   Eye,
+  Download,
 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -27,7 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { useClients } from '../../hooks/use-clients'
 import { useInvoices } from '../../hooks/use-invoices'
-import { generateInvoicePDF, openInvoiceInNewTab } from '../../lib/pdf-generator'
+import { generateInvoicePDF, downloadInvoicePDF, openInvoiceInNewTab } from '../../lib/pdf-generator'
 import { DocumentViewerModal } from '../dashboard/document-viewer-modal'
 import type { InvoiceInsert } from '../../types/invoice'
 
@@ -134,7 +135,7 @@ export function ClientsDataPage() {
     }
 
     setSubmittingInvoice(true)
-    const pdfDataUri = generateInvoicePDF(selectedClient, invoiceData, false)
+    const pdfDataUri = await generateInvoicePDF(selectedClient, invoiceData)
     const res = await addInvoice(invoiceData)
     setSubmittingInvoice(false)
 
@@ -525,18 +526,7 @@ export function ClientsDataPage() {
                               </TableCell>
                               <TableCell className="text-xs text-muted-foreground">{inv.date}</TableCell>
                               <TableCell>
-                                {inv.file_path ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="gap-1.5 text-xs text-primary hover:text-primary hover:bg-primary/10"
-                                    onClick={() => handlePreviewInvoice(inv)}
-                                    title="معاينة الملف المرفق في المتصفح"
-                                  >
-                                    <Eye className="h-3.5 w-3.5" />
-                                    معاينة الوثيقة
-                                  </Button>
-                                ) : (
+                                <div className="flex items-center gap-1">
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -547,7 +537,17 @@ export function ClientsDataPage() {
                                     <Eye className="h-3.5 w-3.5" />
                                     معاينة PDF
                                   </Button>
-                                )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="gap-1.5 text-xs text-primary hover:bg-primary/10"
+                                    onClick={() => selectedClient && downloadInvoicePDF(selectedClient, inv)}
+                                    title="تحميل الفاتورة كـ PDF"
+                                  >
+                                    <Download className="h-3.5 w-3.5" />
+                                    تحميل PDF
+                                  </Button>
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <Button

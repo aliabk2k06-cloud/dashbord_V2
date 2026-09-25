@@ -1,11 +1,10 @@
-import { createRootRoute, createRoute, createRouter, RouterProvider, Outlet, useNavigate } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, RouterProvider, Outlet, useNavigate, Navigate } from '@tanstack/react-router'
 import { AppLayout } from '../components/layout/app-layout'
 import { StatsCards } from '../components/dashboard/stats-cards'
 import { ClientsTable } from '../components/dashboard/clients-table'
 import { AddClientForm } from '../components/clients/add-client-form'
 import { ClientWorkspacePage } from '../components/dashboard/client-workspace-page'
 import { ClientsDataPage } from '../components/clients-data/clients-data-page'
-import { GlobalAiProcessingPage } from '../components/dashboard/global-ai-processing-page'
 import { useClients } from '../hooks/use-clients'
 import { Button } from '../components/ui/button'
 import { AlertCircle, UserPlus } from 'lucide-react'
@@ -127,11 +126,7 @@ const clientsDataRoute = createRoute({
 const aiProcessingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/ai-processing',
-  component: () => (
-    <AppLayout>
-      <GlobalAiProcessingPage />
-    </AppLayout>
-  ),
+  component: () => <Navigate to="/" replace />,
 })
 
 // COMPLETELY STANDALONE DEDICATED TRADER WORKSPACE (NO AppLayout WRAPPER!)

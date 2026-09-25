@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, type FormEvent } from 'react'
+import { useState, useEffect, useRef, useMemo, type FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { DirectionProvider } from '@radix-ui/react-direction'
 import JSZip from 'jszip'
@@ -42,6 +42,9 @@ import {
   Sparkles,
   ChevronDown,
   ChevronLeft,
+  BookOpen,
+  FolderTree,
+  BarChart3,
 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -57,7 +60,7 @@ import {
 } from '../ui/select'
 import { ThemeToggle } from '../layout/theme-toggle'
 import { ClientWorkspaceProvider, useClientWorkspace, type ClientTabType } from '../../context/client-workspace-context'
-import { generateInvoiceHTML, generateInvoicePDF, openInvoiceInNewTab, generateBankStatementHTML } from '../../lib/pdf-generator'
+import { generateInvoicePDF, generateInvoicePDFBlob, openInvoiceInNewTab, generateBankStatementHTML } from '../../lib/pdf-generator'
 import { EditClientDialog } from './edit-client-dialog'
 import { DeleteConfirmDialog } from './delete-confirm-dialog'
 import { DocumentViewerModal } from './document-viewer-modal'
@@ -409,10 +412,10 @@ function WorkspaceInnerContent() {
         const safeNumber = (inv.invoice_number || `FAC-${i+1}`).replace(/[/\\?%*:|"<>]/g, '_')
 
         if (inv.is_generated || !inv.file_path) {
-          // Generated document: store as clean HTML file (printable in any browser)
-          const htmlContent = generateInvoiceHTML(client, inv)
-          const fileName = `${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.html`
-          folder.file(fileName, htmlContent)
+          // Generated document: store as true PDFme document
+          const pdfBlob = await generateInvoicePDFBlob(client, inv)
+          const fileName = `${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.pdf`
+          folder.file(fileName, pdfBlob)
         } else {
           // Uploaded file document: fetch blob and add to ZIP
           try {
@@ -426,13 +429,13 @@ function WorkspaceInnerContent() {
               const uploadedName = `${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.${ext}`
               folder.file(uploadedName, blob)
             } else {
-              // Fallback to HTML document format if missing
-              const htmlContent = generateInvoiceHTML(client, inv)
-              folder.file(`${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.html`, htmlContent)
+              // Fallback to PDF document format if missing
+              const pdfBlob = await generateInvoicePDFBlob(client, inv)
+              folder.file(`${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.pdf`, pdfBlob)
             }
           } catch {
-            const htmlContent = generateInvoiceHTML(client, inv)
-            folder.file(`${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.html`, htmlContent)
+            const pdfBlob = await generateInvoicePDFBlob(client, inv)
+            folder.file(`${inv.type === 'sale' ? 'بيع' : 'شراء'}_${safeNumber}.pdf`, pdfBlob)
           }
         }
 
@@ -958,9 +961,17 @@ function WorkspaceInnerContent() {
   }
 
   // Live real-time PDF invoice preview data URI during invoice creation
-  const livePdfUri = useMemo(() => {
-    if (!client) return ''
-    return generateInvoicePDF(client, getDraftInvoice())
+  const [livePdfUri, setLivePdfUri] = useState<string>('')
+
+  useEffect(() => {
+    if (!client) return
+    let isSubscribed = true
+    generateInvoicePDF(client, getDraftInvoice()).then((url) => {
+      if (isSubscribed) setLivePdfUri(url)
+    })
+    return () => {
+      isSubscribed = false
+    }
   }, [client, invNumber, invType, amountHt, tvaRate, date, counterparty, notes, selectedYear])
 
   // Filtered invoices according to search text, type, month, and semester/trimester period
@@ -1240,14 +1251,14 @@ function WorkspaceInnerContent() {
               )}
             </div>
 
-            {/* GROUP 3: SMART ACCOUNTANT المحاسب الذكي (موقع في الأسفل مع إمكانية الفتح والغلق) */}
+            {/* GROUP 3: SMART ACCOUNTANT المحاسب الذكي */}
             <div className="space-y-1 pt-2 border-t border-purple-500/30">
               <button
                 type="button"
                 onClick={() => setIsAiAccordionOpen((prev) => !prev)}
                 className={cn(
                   'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold transition-all text-start border relative overflow-hidden',
-                  activeTab === 'ai_invoice_processing'
+                  ['ai_smart_processing', 'ai_journal_entries', 'ai_chart_of_accounts', 'ai_reports'].includes(activeTab)
                     ? 'bg-purple-600/10 text-purple-600 dark:text-purple-400 border-purple-500/40 shadow-xs'
                     : 'border-purple-500/20 text-purple-600 dark:text-purple-300 bg-purple-500/5 hover:bg-purple-500/10'
                 )}
@@ -1268,22 +1279,33 @@ function WorkspaceInnerContent() {
                 )}
               </button>
 
-              {/* Collapsible Child Menu */}
+              {/* Collapsible Child Menu — 4 AI Sub-Tabs */}
               {isAiAccordionOpen && (
                 <div className="ps-4 space-y-1 border-s-2 border-purple-500/30 ms-3 pt-1 pb-1 animate-in fade-in duration-150">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('ai_invoice_processing')}
-                    className={cn(
-                      'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
-                      activeTab === 'ai_invoice_processing'
-                        ? 'bg-purple-600 text-white font-bold shadow-xs'
-                        : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
-                    )}
-                  >
-                    <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1 truncate">المعالجة الذكية للفواتير</span>
-                  </button>
+                  {([
+                    { id: 'ai_smart_processing' as const, label: 'المعالجة الذكية', icon: Sparkles },
+                    { id: 'ai_journal_entries' as const, label: 'القيود المحاسبية', icon: BookOpen },
+                    { id: 'ai_chart_of_accounts' as const, label: 'مخطط الحسابات', icon: FolderTree },
+                    { id: 'ai_reports' as const, label: 'التقارير والإحصائيات', icon: BarChart3 },
+                  ]).map((subTab) => {
+                    const SubIcon = subTab.icon
+                    return (
+                      <button
+                        key={subTab.id}
+                        type="button"
+                        onClick={() => setActiveTab(subTab.id)}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all text-start',
+                          activeTab === subTab.id
+                            ? 'bg-purple-600 text-white font-bold shadow-xs'
+                            : 'text-muted-foreground hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300'
+                        )}
+                      >
+                        <SubIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">{subTab.label}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1447,11 +1469,12 @@ function WorkspaceInnerContent() {
               }}
             />
 
-            {/* TAB AI: AI INVOICE PROCESSING */}
-            {activeTab === 'ai_invoice_processing' && (
+            {/* TAB AI: SMART ACCOUNTANT (all 4 AI sub-tabs) */}
+            {['ai_smart_processing', 'ai_journal_entries', 'ai_chart_of_accounts', 'ai_reports'].includes(activeTab) && (
               <AiProcessingView
                 client={client}
                 invoices={invoices}
+                onRefreshInvoices={workspace.refreshInvoices}
               />
             )}
 

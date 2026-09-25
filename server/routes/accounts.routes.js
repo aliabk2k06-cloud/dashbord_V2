@@ -54,7 +54,7 @@ router.get('/all-sub-accounts', (req, res) => {
  * POST /api/internal/accounts/sub-account
  * Automatically generate and create a new sub-account for a supplier/client
  */
-router.post('/sub-account', (req, res) => {
+router.post(['/sub-account', '/ensure-sub-account'], (req, res) => {
   let payload = req.body
   if (typeof payload === 'string') {
     try { payload = JSON.parse(payload) } catch(e) {}
@@ -71,7 +71,7 @@ router.post('/sub-account', (req, res) => {
   // Check if sub-account already exists for this client and name
   db.get(
     'SELECT id, client_id, code, name, parent_code, entity_type FROM sub_accounts WHERE client_id = ? AND parent_code = ? AND LOWER(name) = LOWER(?)',
-    [client_id, parent, name.trim()],
+    [client_id, parent, name],
     (checkErr, existing) => {
       if (checkErr) {
         console.error('Error checking existing sub account:', checkErr)
@@ -85,9 +85,9 @@ router.post('/sub-account', (req, res) => {
         })
       }
 
-      // Find max existing code for this client and parent_code
+      // Query all existing codes for this client and parent_code to find max numeric suffix
       db.all(
-        'SELECT code FROM sub_accounts WHERE client_id = ? AND parent_code = ? ORDER BY code DESC',
+        'SELECT code FROM sub_accounts WHERE client_id = ? AND parent_code = ?',
         [client_id, parent],
         (err, rows) => {
           if (err) {
@@ -95,26 +95,34 @@ router.post('/sub-account', (req, res) => {
             return res.status(500).json({ error: 'Database error' })
           }
 
-          let nextIndex = 1
-          if (rows && rows.length > 0) {
-            const lastCode = rows[0].code
-            const suffix = lastCode.startsWith(parent) ? lastCode.slice(parent.length) : lastCode
-            const match = suffix.match(/\d+$/)
-            if (match) {
-              nextIndex = parseInt(match[0], 10) + 1
+          const existingCodes = new Set((rows || []).map((r) => r.code))
+          let maxNum = 0
+
+          for (const row of rows || []) {
+            const suffix = row.code.startsWith(parent) ? row.code.slice(parent.length) : row.code
+            const numMatch = suffix.match(/^\d+$/)
+            if (numMatch) {
+              const val = parseInt(numMatch[0], 10)
+              if (val > maxNum) maxNum = val
             }
           }
 
-          const paddedIndex = String(nextIndex).padStart(2, '0')
-          const newCode = `${parent}${paddedIndex}`
+          let nextIndex = maxNum + 1
+          let newCode = `${parent}${String(nextIndex).padStart(2, '0')}`
+
+          while (existingCodes.has(newCode)) {
+            nextIndex++
+            newCode = `${parent}${String(nextIndex).padStart(2, '0')}`
+          }
 
           db.run(
             'INSERT INTO sub_accounts (client_id, code, name, parent_code, entity_type) VALUES (?, ?, ?, ?, ?)',
-            [client_id, newCode, name.trim(), parent, entity_type || 'supplier'],
-            function (err) {
-              if (err) {
-                console.error('Error inserting sub account:', err)
-                return res.status(500).json({ error: 'Failed to create sub account' })
+            [client_id, newCode, name, parent, entity_type],
+            function (insertErr) {
+              if (insertErr) {
+                console.error('Error inserting sub account:', insertErr)
+                // Fallback: if race condition happened, return 500 or search existing
+                return res.status(500).json({ error: 'Failed to create sub account', details: insertErr.message })
               }
 
               const subAccountId = this.lastID
@@ -122,7 +130,7 @@ router.post('/sub-account', (req, res) => {
               // Log in account_creation_log
               db.run(
                 'INSERT INTO account_creation_log (client_id, sub_account_code, entity_name) VALUES (?, ?, ?)',
-                [client_id, newCode, name.trim()],
+                [client_id, newCode, name],
                 (logErr) => {
                   if (logErr) console.error('Failed to log sub-account creation:', logErr)
 
@@ -130,9 +138,9 @@ router.post('/sub-account', (req, res) => {
                     id: subAccountId,
                     client_id,
                     code: newCode,
-                    name: name.trim(),
+                    name,
                     parent_code: parent,
-                    entity_type: entity_type || 'supplier',
+                    entity_type,
                     action: 'created_new'
                   })
                 }
